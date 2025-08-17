@@ -1,0 +1,55 @@
+maze_game/
+│── Makefile                # 編譯規則
+│── README.md               # 專案說明
+│
+├── src/                    # 原始碼
+│   ├── main.c              # 程式進入點
+│   ├── game.c              # 遊戲流程控制 (開始、結束、輸贏判斷)
+│   ├── maze.c              # 迷宮生成/讀取
+│   ├── player.c            # 玩家移動、狀態
+│   └── utils.c             # 工具 (隨機數、檔案處理)
+│
+├── include/                # 標頭檔
+│   ├── game.h
+│   ├── maze.h
+│   ├── player.h
+│   └── utils.h
+│
+├── assets/                 # 資源檔
+│   ├── mazes/              # 預先設計的迷宮檔案
+│   │   ├── maze1.txt
+│   │   └── maze2.txt
+│   └── sprites/            # 角色或地圖符號 (如果要 ASCII art 可放這裡)
+│
+├── bin/                    # 編譯後的執行檔
+│
+└── build/                  # 中間編譯檔 (.o)
+
+
+
+main.c:
+負責程式入口，呼叫 initGame()、runGame() 等。
+
+game.c / game.h:
+管理遊戲狀態 (開始、進行中、結束)。
+
+maze.c / maze.h:
+建立或讀取迷宮 (generateMaze() / loadMazeFromFile())。
+
+player.c / player.h:
+處理玩家位置、輸入移動 (movePlayer()、checkCollision())。
+
+utils.c / utils.h:
+提供隨機數工具、檔案處理、共用函數。
+
+assets/mazes/*.txt:
+用文字表示迷宮，例如：
+    #######
+    #S   E#
+    # ### #
+    #     #
+    #######
+    # 代表牆
+        S 起點
+        E 終點
+        空白格代表可走
