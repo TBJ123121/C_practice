@@ -1,0 +1,5 @@
+Tom 1 80.50
+John 2 60.00
+Kelly 3 77.00
+Hist 5 88.22
+Lilly 6 99.00
