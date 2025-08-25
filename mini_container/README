@@ -1,0 +1,49 @@
+project file tree:
+
+mini_container/
+├── src/
+│   ├── main.c              # 程式進入點
+│   ├── container.c         # 建立/啟動容器的邏輯
+│   ├── namespace.c         # Linux namespace 隔離 (UTS, PID, Mount...)
+│   ├── cgroup.c            # 設定資源限制 (CPU/Memory)
+│   ├── filesystem.c        # rootfs 掛載、chroot、pivot_root
+│   ├── network.c           # 建立 veth, 網路 namespace
+│   ├── utils.c             # 工具函式 (字串處理、log...)
+│   └── include/
+│       ├── container.h
+│       ├── namespace.h
+│       ├── cgroup.h
+│       ├── filesystem.h
+│       ├── network.h
+│       └── utils.h
+├── rootfs/                 # 測試用 rootfs
+├── Makefile
+└── README.md
+
+
+工作流程 (程式邏輯)
+1. main.c 收到使用者輸入 (要跑的程式)
+
+2. container.c 建立 child process
+
+3.child process 呼叫：
+
+    namespace.c → 建立 namespace 隔離
+
+    cgroup.c → 設定資源限制
+
+    filesystem.c → 掛載 rootfs
+
+
+
+4. 最後用 execve() 啟動使用者指定程式
+
+
+# mini_container
+已有功能:
+UTS namespace
+PID namespace
+Mount namespace + chroot rootfs指定rootfs
+basic shell 可以跑busy box裡的/bin/sh
+cgroup2 設定 memory/cpu/pids 限制(讓host限制container的資源使用量)
+
