@@ -14,6 +14,7 @@
 #include "../include/filesystem.h"
 #include "../include/cgroups.h"
 #include "../include/container.h"
+#include "../include/network.h"
 
 int container_main(void *arg){
     printf(">>>> [child] Starting the container setup <<<<\n");
@@ -22,6 +23,9 @@ int container_main(void *arg){
     setup_namespace();
     //setup rooft filesystem
     setup_rootfs((const char *)arg);
+
+    //setup network
+    //setup_container_eth(getpid(), NULL);
 
     //執行使用者指定的程式
     char *const child_args[] = {"/bin/sh", NULL};

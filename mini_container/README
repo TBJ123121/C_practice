@@ -46,4 +46,6 @@ PID namespace
 Mount namespace + chroot rootfs指定rootfs
 basic shell 可以跑busy box裡的/bin/sh
 cgroup2 設定 memory/cpu/pids 限制(讓host限制container的資源使用量)
+利用bridge功能建立網路連線
+
 

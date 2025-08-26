@@ -10,6 +10,7 @@
 #include "../include/cgroups.h"
 #include "../include/container.h"
 #include <string.h>
+#include "../include/network.h"
 
 #define STACK_SIZE (1024 * 1024)   // Stack size for cloned child
 static char child_stack[STACK_SIZE];
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]){
 
     //建立新的porcess設定其一些UTS namespace、PID namespace、Mount namespace
     pid_t child_pid = clone(container_main, child_stack + STACK_SIZE,
-                            SIGCHLD | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS, (void *)argv[1]);
+                            SIGCHLD | CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWNET, (void *)argv[1]);
     
     
     if(child_pid == -1){
@@ -56,7 +57,9 @@ int main(int argc, char *argv[]){
     }
 
     //parent call setup_cgroup to limit resource
+    printf("[parent] child pid = %d\n", child_pid);
     setup_cgroup(child_pid);
+    setup_container_eth(child_pid, "br0");
 
     //wait for child process to finish
     waitpid(child_pid, NULL, 0);
