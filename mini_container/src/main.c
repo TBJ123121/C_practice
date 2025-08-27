@@ -59,6 +59,11 @@ int main(int argc, char *argv[]){
     //parent call setup_cgroup to limit resource
     printf("[parent] child pid = %d\n", child_pid);
     setup_cgroup(child_pid);
+    
+    // 設置host端bridge和veth
+    setup_host_veth(child_pid);
+    
+    // 設置容器內網絡
     setup_container_eth(child_pid, "br0");
 
     //wait for child process to finish

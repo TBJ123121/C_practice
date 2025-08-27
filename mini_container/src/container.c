@@ -25,7 +25,7 @@ int container_main(void *arg){
     setup_rootfs((const char *)arg);
 
     //setup network
-    //setup_container_eth(getpid(), NULL);
+    setup_container_eth(getpid(), "br0");
 
     //執行使用者指定的程式
     char *const child_args[] = {"/bin/sh", NULL};

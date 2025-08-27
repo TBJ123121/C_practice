@@ -18,12 +18,18 @@ void get_container_ip(int pid, char *ip_buf, size_t size){
 }
 
 //host端建立bridge和veth，需要在host下
-void setup_host_veth(int child_pid, char *contaienr_ip){
+void setup_host_veth(int child_pid){
     char cmd[256];
-    // //建立bridge
-    // system("ip link add name br0 type bridge 2>/dev/null");
-    // system("ip link set br0 up");
-    // system("ip addr add 192.168.1.100/24 dev br0 2>/dev/null"); //固定gateway
+    //建立bridge
+    system("ip link add name br0 type bridge 2>/dev/null");
+    system("ip link set br0 up");
+    system("ip addr add 192.168.1.1/24 dev br0 2>/dev/null"); //設置為gateway
+    
+    // 啟用IP轉發
+    system("echo 1 > /proc/sys/net/ipv4/ip_forward");
+    
+    // 設置NAT規則（自動偵測外網介面）找出 host 的外部網卡，然後確保有一條 iptables NAT 規則，讓容器的子網 (192.168.1.0/24) 可以透過 host 出去
+    system("sh -c 'IF=$(ip route show default 0.0.0.0/0 | awk \"NR==1{print $5}\"); iptables -t nat -C POSTROUTING -s 192.168.1.0/24 -o $IF -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $IF -j MASQUERADE'");
 
     //建立veth pair
     snprintf(cmd, sizeof(cmd), "ip link add veth_host_%d type veth peer name veth_child_%d", child_pid, child_pid);
@@ -46,6 +52,7 @@ void setup_host_veth(int child_pid, char *contaienr_ip){
 int setup_container_eth(pid_t child_pid, const char *bridge_name) {
     char cmd[256];
     char ip[32];
+    //需要在container下設定，使用nsenter讓其在host下也可以透過child pid操作
 
     //產生ip
     get_container_ip(child_pid, ip, sizeof(ip));
@@ -57,23 +64,10 @@ int setup_container_eth(pid_t child_pid, const char *bridge_name) {
     snprintf(veth_child, sizeof(veth_child), "veth_child_%d", child_pid);  
     printf(">>>> [network] setup veth pair: %s <-> %s\n", veth_host, veth_child);
 
-    // 1. 建立 veth pair
-    snprintf(cmd, sizeof(cmd),
-        "ip link add %s type veth peer name %s", veth_host, veth_child);
-    system(cmd);
-
-    // 2. 將 child 端移進 container netns
-    snprintf(cmd, sizeof(cmd),
-        "ip link set %s netns %d", veth_child, child_pid);
-    system(cmd);
-
-    // 3. 設定 host 端：綁到 bridge (br0)
-    if (bridge_name) {
-        snprintf(cmd, sizeof(cmd),
-            "ip link set %s master %s", veth_host, bridge_name);
-        system(cmd);
-    }
-    snprintf(cmd, sizeof(cmd), "ip link set %s up", veth_host);
+    // veth pair 已在 host 端建立並將 child 端移入 netns
+    // 這裡僅進行容器內端與 host 端必要的啟用與配置
+    (void)bridge_name; // bridge 綁定已在 host 端完成
+    snprintf(cmd, sizeof(cmd), "ip link set %s up 2>/dev/null", veth_host);
     system(cmd);
 
     // 4. 在 container 內設定 eth0
@@ -87,13 +81,20 @@ int setup_container_eth(pid_t child_pid, const char *bridge_name) {
     system(cmd);
 
     snprintf(cmd, sizeof(cmd),
-        "nsenter -t %d -n ip addr add %s/24 dev eth0", child_pid, ip); // 給個簡單的唯一 IP
+        "nsenter -t %d -n ip addr add %s/24 dev eth0", child_pid, ip);
     system(cmd);
 
-
+    //設定default route走 192.168.1.1 host bridge
     snprintf(cmd, sizeof(cmd),
         "nsenter -t %d -n ip route add default via 192.168.1.1", child_pid);
     system(cmd);
+
+    // 設置DNS（需進入 mount namespace 才能寫入容器的 /etc）
+    snprintf(cmd, sizeof(cmd),
+        "nsenter -t %d -n -m sh -c 'printf \"nameserver 8.8.8.8\\n\" > /etc/resolv.conf'", child_pid);
+    system(cmd);
+
+    // 容器內不需開啟 IP 轉發；對外通訊依賴 host 的 NAT 與轉發
 
     printf(">>>> [network] Container PID %d is already set eth0 and IP\n", child_pid);
     return 0;

@@ -63,6 +63,7 @@ void setup_mounts(){
     // 這裡可以添加其他需要的掛載點
     // 例如 /dev, /dev/pts, /proc, /sys 等
     mkdir("/dev", 0755);
+    mkdir("/etc", 0755);
     mkdir("/proc", 0755);
     mkdir("/sys", 0755);
 
@@ -97,6 +98,15 @@ void setup_mounts(){
     if(symlink("pts/ptmx", "/dev/ptmx") != 0) {
         perror("symlink /dev/ptmx");
         exit(EXIT_FAILURE);
+    }
+
+    // 寫入基本 DNS 設定，確保容器可解析域名
+    FILE *resolv = fopen("/etc/resolv.conf", "w");
+    if(resolv) {
+        fputs("nameserver 8.8.8.8\n", resolv);
+        fclose(resolv);
+    } else {
+        perror("write /etc/resolv.conf");
     }
 }
 
