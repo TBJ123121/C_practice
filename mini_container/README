@@ -8,14 +8,12 @@ mini_container/
 │   ├── cgroup.c            # 設定資源限制 (CPU/Memory)
 │   ├── filesystem.c        # rootfs 掛載、chroot、pivot_root
 │   ├── network.c           # 建立 veth, 網路 namespace
-│   ├── utils.c             # 工具函式 (字串處理、log...)
 │   └── include/
 │       ├── container.h
 │       ├── namespace.h
 │       ├── cgroup.h
 │       ├── filesystem.h
 │       ├── network.h
-│       └── utils.h
 ├── rootfs/                 # 測試用 rootfs
 ├── Makefile
 └── README.md
