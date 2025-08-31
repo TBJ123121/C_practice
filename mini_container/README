@@ -33,7 +33,6 @@ mini_container/
     filesystem.c → 掛載 rootfs
 
 
-
 4. 最後用 execve() 啟動使用者指定程式
 
 
